@@ -1,3 +1,17 @@
+fastq/
+fastp/
+qc/
+star/
+starindex/
+bed/
+bedgraph/
+ends/
+ref/
+*.bed
+*.bam
+*.bai
+*.png
+*.tsv
 # ignore large raw data files
 data/*.bigWig
 data/*.bed
