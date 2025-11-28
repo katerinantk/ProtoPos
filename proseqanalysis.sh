@@ -12,9 +12,6 @@ FASTP_DIR="fastp"
 QC_DIR="qc"
 STAR_DIR="star"
 STAR_INDEX_DIR="starindex"
-BED_DIR="bed"
-ENDS_DIR="ends"
-BIGWIG_DIR="bigwig"
 
 GENOME_FA="${DATA_DIR}/genome.fa"
 GTF="${DATA_DIR}/gencode.v47.annotation.gtf"
@@ -40,15 +37,13 @@ mkdir -p \
   "${FASTP_DIR}" \
   "${QC_DIR}" \
   "${STAR_DIR}" \
-  "${STAR_INDEX_DIR}" \
-  "${BED_DIR}" \
-  "${ENDS_DIR}" \
-  "${BIGWIG_DIR}"
+  "${STAR_INDEX_DIR}"
 
 # -----------------------------
 # Build STAR genome index 
 # -----------------------------
 if [[ ! -f "${STAR_INDEX_DIR}/Genome" ]]; then
+    echo "Building STAR index..."
     STAR \
       --runThreadN "${THREADS}" \
       --runMode genomeGenerate \
@@ -56,12 +51,16 @@ if [[ ! -f "${STAR_INDEX_DIR}/Genome" ]]; then
       --genomeFastaFiles "${GENOME_FA}" \
       --sjdbGTFfile "${GTF}" \
       --sjdbOverhang 75
+    echo "STAR index build finished."
+else
+    echo "STAR index already exists. Skipping index build."
 fi
 
 # -----------------------------
-# Download / Fastqc / fastp / star 
+# Download / Fastqc / fastp / STAR 
 # -----------------------------
 for SRA in "${SRA_IDS[@]}"; do
+    echo "Processing ${SRA}..."
 
     RAW="${FASTQ_DIR}/${SRA}.fastq.gz"
     TRIM="${FASTP_DIR}/${SRA}.trimmed.fastq.gz"
@@ -73,7 +72,9 @@ for SRA in "${SRA_IDS[@]}"; do
     # Download fastq
     # -------------------------
     if [[ ! -f "${RAW}" ]]; then
+        echo "Downloading ${SRA}..."
         fasterq-dump "${SRA}" -O "${FASTQ_DIR}" --threads "${THREADS}"
+        # if this ever errors, try: fasterq-dump "${SRA}" -O "${FASTQ_DIR}" -e "${THREADS}"
         gzip -f "${FASTQ_DIR}/${SRA}.fastq"
     else
         echo "Skipping download for ${SRA}: ${RAW} already exists."
@@ -82,26 +83,33 @@ for SRA in "${SRA_IDS[@]}"; do
     # -------------------------
     # Fastqc on raw reads
     # -------------------------
+    echo "Running FastQC on raw reads for ${SRA}..."
     fastqc -t "${THREADS}" -o "${QC_DIR}" "${RAW}"
+    echo "FastQC on raw reads done for ${SRA}."
 
     # -------------------------
     # Trimming with fastp 
     # -------------------------
+    echo "Running fastp for ${SRA}..."
     fastp \
       -i "${RAW}" \
       -o "${TRIM}" \
       -w "${THREADS}" \
       --html "${HTML_REPORT}" \
       --json "${JSON_REPORT}"
+    echo "fastp done for ${SRA}."
 
     # -------------------------
     # Fastqc on trimmed reads
     # -------------------------
+    echo "Running FastQC on trimmed reads for ${SRA}..."
     fastqc -t "${THREADS}" -o "${QC_DIR}" "${TRIM}"
+    echo "FastQC on trimmed reads done for ${SRA}."
 
     # -------------------------
-    # star alignment 
+    # STAR alignment 
     # -------------------------
+    echo "Aligning ${SRA} with STAR..."
     PREFIX="${STAR_DIR}/${SRA}."
     STAR \
       --runThreadN "${THREADS}" \
@@ -110,85 +118,25 @@ for SRA in "${SRA_IDS[@]}"; do
       --readFilesCommand zcat \
       --outFileNamePrefix "${PREFIX}" \
       --outSAMtype BAM SortedByCoordinate
+    echo "STAR alignment done for ${SRA}."
 
-    
-done
+    # -------------------------
+    # Confirm BAM and convert to SAM
+    # -------------------------
+    BAM="${STAR_DIR}/${SRA}.Aligned.sortedByCoord.out.bam"
+    SAM="${STAR_DIR}/${SRA}.Aligned.sortedByCoord.out.sam"
 
-# -----------------------------
-# rRNA and tRNA BED regions 
-# -----------------------------
-RRNA_TRNA_BED="${DATA_DIR}/rRNAtRNA.bed"
-RRNA_TRNA_UNIQ="${DATA_DIR}/rRNAtRNA.unique.bed"
-RRNA_TRNA_MERGED="${DATA_DIR}/rRNAtRNA.merged.bed"
+    if [[ -f "${BAM}" ]]; then
+        echo "Confirmed: BAM file exists for ${SRA}: ${BAM}"
+    else 
+        echo "ERROR: BAM file not found for ${SRA}: ${BAM}"
+        exit 1
+    fi
 
-if [[ ! -f "${RRNA_TRNA_MERGED}" ]]; then
-
-    awk '
-        $3 == "exon" && $0 ~ /gene_type "rRNA"/ {print $1"\t"$4-1"\t"$5}
-        $3 == "exon" && $0 ~ /gene_type "tRNA"/ {print $1"\t"$4-1"\t"$5}
-    ' "${GTF}" > "${RRNA_TRNA_BED}"
-
-    sort -u "${RRNA_TRNA_BED}" > "${RRNA_TRNA_UNIQ}"
-
-    sort -k1,1 -k2,2n "${RRNA_TRNA_UNIQ}" \
-      | bedtools merge -i - > "${RRNA_TRNA_MERGED}"
-fi
-
-# -----------------------------
-# Chromosome sizes 
-# -----------------------------
-CHROM_SIZES="${DATA_DIR}/genome.chrom.sizes"
-
-if [[ ! -f "${CHROM_SIZES}" ]]; then
-    samtools faidx "${GENOME_FA}"
-    cut -f1,2 "${GENOME_FA}.fai" > "${CHROM_SIZES}"
-fi
-
-# -----------------------------
-# From mapped bams to bed to 3' ends 
-# we filter rRNA and tRNA 
-# -----------------------------
-for SRA in "${SRA_IDS[@]}"; do
-
-    # Input from bams from STAR
-    BAM_SORTED="${STAR_DIR}/${SRA}.Aligned.sortedByCoord.out.bam"
-
-    # Keep only mapped reads
-    BAM_MAPPED="${STAR_DIR}/${SRA}.mapped.bam"
-    samtools view -b -F 4 "${BAM_SORTED}" > "${BAM_MAPPED}"
-    samtools index "${BAM_MAPPED}"
-
-    # bam to bed 
-    BED_ALL="${BED_DIR}/${SRA}.bed"
-    bedtools bamtobed -i "${BAM_MAPPED}" > "${BED_ALL}"
-
-    # get the 3' ends in a strand specific way 
-    ENDS_3="${ENDS_DIR}/${SRA}.3end.bed"
-    awk '
-        ($6 == "+") {print $1"\t"$3-1"\t"$3"\t"$4"\t"$5"\t"$6}
-        ($6 == "-") {print $1"\t"$2"\t"$2+1"\t"$4"\t"$5"\t"$6}
-    ' "${BED_ALL}" > "${ENDS_3}"
-
-    # Remove rRNA and tRNA regions
-    ENDS_FILTERED="${ENDS_DIR}/${SRA}.filtered.3end.bed"
-    bedtools intersect -v \
-      -a "${ENDS_3}" \
-      -b "${RRNA_TRNA_MERGED}" \
-      > "${ENDS_FILTERED}"
-
-    # Split by strand
-    ENDS_PLUS="${ENDS_DIR}/${SRA}.filtered.plus.3end.bed"
-    ENDS_MINUS="${ENDS_DIR}/${SRA}.filtered.minus.3end.bed"
-
-    awk '$6 == "+"' "${ENDS_FILTERED}"  > "${ENDS_PLUS}"
-    awk '$6 == "-"' "${ENDS_FILTERED}"  > "${ENDS_MINUS}"
-
-    # Coverage to bedgraph
-    PLUS_BG="${BIGWIG_DIR}/${SRA}.pol.plus.bedgraph"
-    MINUS_BG="${BIGWIG_DIR}/${SRA}.pol.minus.bedgraph"
-
-    bedtools genomecov -i "${ENDS_PLUS}"  -g "${CHROM_SIZES}" -bg > "${PLUS_BG}"
-    bedtools genomecov -i "${ENDS_MINUS}" -g "${CHROM_SIZES}" -bg > "${MINUS_BG}"
+    echo "Converting BAM to SAM for ${SRA}..."
+    samtools view -h -o "${SAM}" "${BAM}"
+    echo "SAM file created for ${SRA}: ${SAM}"
 
 done
 
+echo "All samples processed successfully."
