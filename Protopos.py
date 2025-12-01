@@ -1,85 +1,56 @@
 #!/usr/bin/env python3
 
-import pyBigWig
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import os
 import pysam
 
-# -----------------------------
-# Inputs
-# -----------------------------
+# ----------------------------------------------------
+# input sam files
+# ----------------------------------------------------
 
-sam1_path = "star/SRR15304569.Aligned.sortedByCoord.out.sam"
-sam2_path = "star/SRR15304570.Aligned.sortedByCoord.out.sam"
-gtf_path = "data/gencode.v47.annotation.gtf"
+sam_files = [
+    "star/SRR15304569.Aligned.sortedByCoord.out.sam",
+    "star/SRR15304570.Aligned.sortedByCoord.out.sam"
+]
+  #compute 3' end of the read
+def three_prime_position(read):
+  
+    if read.is_reverse:
+        return read.reference_start
+    else:
+        return read.reference_end - 1
 
-def get3ends(in_path, out_path, gtf_path):
-    # check if the sam files exist
-    if not os.path.exists(sam1_path):
-        raise FileNotFoundError(f"The first sam file was not found: {bam_path}")
+# process each sam file
+for input_sam in sam_files:
 
-    if not os.path.exists(sam2_path):
-        raise FileNotFoundError(f"The second sam file was not found: {bam_path}")
+    output_sam = input_sam.replace(".Aligned.sortedByCoord.out.sam", ".3prime.sam")
 
-    #check if gtf file exists
-    if not os.path.exists(gtf_path):
-        raise FileNotFoundError(f"GTF file not found: {gtf_path}")
+    print("processing the sam files")
 
+    infile = pysam.AlignmentFile(input_sam, "r")
+    outfile = pysam.AlignmentFile(output_sam, "wh", header=infile.header)
 
-# Open the input sam file 
-infile = pysam.AlignmentFile(in_path, "r") 
-# open the output sam file 
-outfile = pysam.AlignmentFile(out_path, "w", header=infile.header)
+    for read in infile:
+        if read.is_unmapped:
+            continue
 
+        tp = three_prime_position(read)
 
+        new = pysam.AlignedSegment(outfile.header)
+        new.query_name = read.query_name
+        new.flag = read.flag
+        new.reference_id = read.reference_id
+        new.reference_start = tp
+        new.cigarstring = "1M"
+        new.mapping_quality = read.mapping_quality
 
+        new.query_sequence = "n"
+        new.query_qualities = pysam.qualitystring_to_array("!")
+        
 
+        outfile.write(new)
 
+    infile.close()
+    outfile.close()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    print(f"finished {output_sam}")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-   
