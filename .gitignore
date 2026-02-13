@@ -1,34 +1,58 @@
-fastq/
-fastp/
-qc/
-star/
-starindex/
-bed/
-bedgraph/
-ends/
-ref/
-*.bed
-*.bam
-*.bai
-*.png
-*.tsv
-# ignore large raw data files
-data/*.bigWig
-data/*.bed
-data/*.bed.gz
-data/*.gtf
-data/*.gtf.gz
+.idea/
+/.augment/
 
-# you can also ignore everything in data/ except maybe tiny test files
-data/
-
-# but DO keep an empty placeholder so others know the folder exists
-!data/README.md
-
-# typical Python junk
+# Python.
 __pycache__/
 *.pyc
+venv*/
 .venv/
-venv/
 .env/
 
+# Ignore contents of data directories but keep structure via .gitkeep.
+data/**/*
+!data/**/
+!data/**/.gitkeep
+
+fastq/**/*
+!fastq/**/
+!fastq/**/.gitkeep
+
+umi/**/*
+!umi/**/
+!umi/**/.gitkeep
+
+fastp/**/*
+!fastp/**/
+!fastp/**/.gitkeep
+
+qc/**/*
+!qc/**/
+!qc/**/.gitkeep
+
+alignments/**/*
+!alignments/**/
+!alignments/**/.gitkeep
+
+bowtie2_index/**/*
+!bowtie2_index/**/
+!bowtie2_index/**/.gitkeep
+
+results/**/*
+!results/**/
+!results/**/.gitkeep
+
+# Large / generated files that should never be committed.
+*.bam
+*.bai
+*.sam
+*.bigWig
+*.bw
+*.bed
+*.bedGraph
+*.fa
+*.fa.fai
+*.gtf
+*.gtf.gz
+*.gff3
+*.gff3.gz
+*.sra

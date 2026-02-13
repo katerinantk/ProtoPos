@@ -19,11 +19,14 @@ FASTQ_DIR="fastq"
 UMI_DIR="umi"
 FASTP_DIR="fastp"
 QC_DIR="qc"
-STAR_DIR="star"
-STAR_INDEX_DIR="starindex"
+ALIGN_DIR="alignments"
+BT2_INDEX_DIR="bowtie2_index"
 
 GENOME_FA="${DATA_DIR}/genome.fa"
 GTF="${DATA_DIR}/gencode.v47.annotation.gtf"
+
+# Bowtie2 index prefix (built from the genome FASTA).
+BT2_INDEX="${BT2_INDEX_DIR}/genome"
 
 # -----------------------------
 # Check if the FASTA and GTF files exist.
@@ -46,24 +49,23 @@ mkdir -p \
   "${UMI_DIR}" \
   "${FASTP_DIR}" \
   "${QC_DIR}" \
-  "${STAR_DIR}" \
-  "${STAR_INDEX_DIR}"
+  "${ALIGN_DIR}" \
+  "${BT2_INDEX_DIR}"
 
 # -----------------------------
-# Build STAR genome index.
+# Build bowtie2 genome index.
+# PRO-seq reads nascent unspliced RNA, so a splice-unaware aligner is
+# appropriate.
 # -----------------------------
-if [[ ! -f "${STAR_INDEX_DIR}/Genome" ]]; then
-    echo "Building STAR index..."
-    STAR \
-      --runThreadN "${THREADS}" \
-      --runMode genomeGenerate \
-      --genomeDir "${STAR_INDEX_DIR}" \
-      --genomeFastaFiles "${GENOME_FA}" \
-      --sjdbGTFfile "${GTF}" \
-      --sjdbOverhang 75
-    echo "STAR index build finished."
+if [[ ! -f "${BT2_INDEX}.1.bt2" ]]; then
+    echo "Building bowtie2 index..."
+    bowtie2-build \
+      --threads "${THREADS}" \
+      "${GENOME_FA}" \
+      "${BT2_INDEX}"
+    echo "Bowtie2 index build finished."
 else
-    echo "STAR index already exists. Skipping index build."
+    echo "Bowtie2 index already exists. Skipping index build."
 fi
 
 # -----------------------------
@@ -132,28 +134,31 @@ for SRA in "${SRA_IDS[@]}"; do
     echo "FastQC on trimmed reads done for ${SRA}."
 
     # -------------------------
-    # STAR alignment.
+    # Bowtie2 alignment (single-end, unspliced).
+    # --very-sensitive for accurate mapping of short nascent RNA fragments.
     # -------------------------
-    echo "Aligning ${SRA} with STAR..."
-    PREFIX="${STAR_DIR}/${SRA}."
-    STAR \
-      --runThreadN "${THREADS}" \
-      --genomeDir "${STAR_INDEX_DIR}" \
-      --readFilesIn "${TRIM}" \
-      --readFilesCommand zcat \
-      --outFileNamePrefix "${PREFIX}" \
-      --outSAMtype BAM SortedByCoordinate
-    echo "STAR alignment done for ${SRA}."
+    echo "Aligning ${SRA} with bowtie2..."
+    RAW_BAM="${ALIGN_DIR}/${SRA}.raw.bam"
+    SORTED_BAM="${ALIGN_DIR}/${SRA}.sorted.bam"
+
+    bowtie2 \
+      -x "${BT2_INDEX}" \
+      -U "${TRIM}" \
+      --very-sensitive \
+      --threads "${THREADS}" \
+      --no-unal \
+    | samtools view -bS -q 10 - \
+    | samtools sort -@ "${THREADS}" -o "${SORTED_BAM}" -
+
+    echo "Bowtie2 alignment done for ${SRA}."
 
     # -------------------------
     # Confirm BAM exists.
     # -------------------------
-    BAM="${STAR_DIR}/${SRA}.Aligned.sortedByCoord.out.bam"
-
-    if [[ -f "${BAM}" ]]; then
-        echo "Confirmed: BAM file exists for ${SRA}: ${BAM}"
+    if [[ -f "${SORTED_BAM}" ]]; then
+        echo "Confirmed: BAM file exists for ${SRA}: ${SORTED_BAM}"
     else
-        echo "ERROR: BAM file not found for ${SRA}: ${BAM}"
+        echo "ERROR: BAM file not found for ${SRA}: ${SORTED_BAM}"
         exit 1
     fi
 
@@ -161,14 +166,14 @@ for SRA in "${SRA_IDS[@]}"; do
     # Index and deduplicate with umi_tools.
     # PCR duplicates sharing the same UMI and mapping position are collapsed.
     # -------------------------
-    DEDUP_BAM="${STAR_DIR}/${SRA}.Aligned.sortedByCoord.out.dedup.bam"
+    DEDUP_BAM="${ALIGN_DIR}/${SRA}.dedup.bam"
 
     echo "Indexing BAM for ${SRA}..."
-    samtools index "${BAM}"
+    samtools index "${SORTED_BAM}"
 
     echo "Running UMI deduplication for ${SRA}..."
     umi_tools dedup \
-      -I "${BAM}" \
+      -I "${SORTED_BAM}" \
       -S "${DEDUP_BAM}" \
       --output-stats="${QC_DIR}/${SRA}.dedup"
     echo "UMI deduplication done for ${SRA}."
