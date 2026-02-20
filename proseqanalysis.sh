@@ -3,8 +3,10 @@
 # -----------------------------
 # Inputs
 # -----------------------------
-SRA_IDS=("SRR15304569" "SRR15304570")
+SRA_IDS=("SRR28248970")
 THREADS=8
+DO_UMI="${DO_UMI:-0}"   # if it's 0 umi extraction does not happen 
+
 
 # UMI pattern at the 5' end of R1 (6 random bases in the standard Mahat et al.
 # 2016 PRO-seq protocol).  Verify this matches the protocol used for your data.
@@ -44,13 +46,17 @@ fi
 # -----------------------------
 # Create output directories.
 # -----------------------------
-mkdir -p \
-  "${FASTQ_DIR}" \
-  "${UMI_DIR}" \
-  "${FASTP_DIR}" \
-  "${QC_DIR}" \
-  "${ALIGN_DIR}" \
-  "${BT2_INDEX_DIR}"
+
+mkdir -p "${DATA_DIR}" \
+         "${FASTQ_DIR}" \
+         "${FASTP_DIR}" \
+         "${QC_DIR}" \
+         "${ALIGN_DIR}" \
+         "${BT2_INDEX_DIR}"
+
+if [[ "${DO_UMI}" -eq 1 ]]; then
+    mkdir -p "${UMI_DIR}"
+fi
 
 # -----------------------------
 # Build bowtie2 genome index.
@@ -105,26 +111,39 @@ for SRA in "${SRA_IDS[@]}"; do
     # The UMI is moved from the read sequence into the read name so that
     # umi_tools dedup can use it after alignment.
     # -------------------------
-    echo "Extracting UMIs for ${SRA} (pattern: ${UMI_PATTERN})..."
+    
+    FASTP_IN="${RAW}"
+  if [[ "${DO_UMI}" -eq 1 ]]; then
+    if ! command -v umi_tools >/dev/null 2>&1; then
+      echo "ERROR: DO_UMI=1 but umi_tools not found in PATH."
+      exit 1
+    fi
+    UMI_EXTRACTED="${UMI_DIR}/${SRA}.umi.fastq.gz"
+    echo "[UMI] Extracting (pattern: ${UMI_PATTERN})..."
     umi_tools extract \
       --stdin="${RAW}" \
       --stdout="${UMI_EXTRACTED}" \
       --bc-pattern="${UMI_PATTERN}"
-    echo "UMI extraction done for ${SRA}."
+    FASTP_IN="${UMI_EXTRACTED}"
+    echo "[UMI] Done: ${UMI_EXTRACTED}"
+  else
+    echo "[UMI] Skipping UMI extraction."
+  fi
 
     # -------------------------
     # Trimming with fastp.
     # Explicit adapter sequence for the standard PRO-seq 3' RNA adapter.
     # -------------------------
-    echo "Running fastp for ${SRA}..."
+    echo "Running fastp..."
     fastp \
-      -i "${UMI_EXTRACTED}" \
-      -o "${TRIM}" \
-      -w "${THREADS}" \
-      --adapter_sequence "${ADAPTER_SEQ}" \
-      --html "${HTML_REPORT}" \
-      --json "${JSON_REPORT}"
-    echo "fastp done for ${SRA}."
+        -i "${FASTP_IN}" \
+        -o "${TRIM}" \
+        -w "${THREADS}" \
+        --adapter_sequence "${ADAPTER_SEQ}" \
+        --html "${HTML_REPORT}" \
+        --json "${JSON_REPORT}"
+
+    echo "fastp done."
 
     # -------------------------
     # FastQC on trimmed reads.
@@ -149,6 +168,9 @@ for SRA in "${SRA_IDS[@]}"; do
       --no-unal \
     | samtools view -bS -q 10 - \
     | samtools sort -@ "${THREADS}" -o "${SORTED_BAM}" -
+      
+    samtools index "${SORTED_BAM}"
+
 
     echo "Bowtie2 alignment done for ${SRA}."
 
@@ -166,21 +188,19 @@ for SRA in "${SRA_IDS[@]}"; do
     # Index and deduplicate with umi_tools.
     # PCR duplicates sharing the same UMI and mapping position are collapsed.
     # -------------------------
+    if [[ "${DO_UMI}" -eq 1 ]]; then
     DEDUP_BAM="${ALIGN_DIR}/${SRA}.dedup.bam"
-
-    echo "Indexing BAM for ${SRA}..."
-    samtools index "${SORTED_BAM}"
-
-    echo "Running UMI deduplication for ${SRA}..."
+    echo "[Dedup] umi_tools dedup..."
     umi_tools dedup \
       -I "${SORTED_BAM}" \
       -S "${DEDUP_BAM}" \
       --output-stats="${QC_DIR}/${SRA}.dedup"
-    echo "UMI deduplication done for ${SRA}."
-
-    echo "Indexing deduplicated BAM for ${SRA}..."
     samtools index "${DEDUP_BAM}"
+    echo "[Dedup] Done: ${DEDUP_BAM} (+ .bai)"
+  else
+    echo "[Dedup] Skipping (no UMIs)."
+  fi
 
-done
+  done
 
 echo "All samples processed successfully."

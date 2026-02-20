@@ -141,9 +141,9 @@ def extract_active_sites(input_bam, output_bam, protocol="pro_seq"):
 # -------------------------------------------------------------------------
 
 BAM_FILES = [
-    "alignments/SRR15304569.dedup.bam",
-    "alignments/SRR15304570.dedup.bam",
+    "alignments/SRR28248970.sorted.bam",
 ]
+
 
 
 # -------------------------------------------------------------------------
@@ -153,7 +153,7 @@ BAM_FILES = [
 def main():
     """Run active-site extraction on all BAM files in BAM_FILES."""
     for input_bam in BAM_FILES:
-        output_bam = input_bam.replace(".dedup.bam", ".3prime.sorted.bam")
+        output_bam = input_bam.replace(".bam", ".3prime.sorted.bam")
         print(f"Processing {input_bam} ...")
         stats = extract_active_sites(input_bam, output_bam, protocol="pro_seq")
         print(f"  {stats['total_reads']} reads "

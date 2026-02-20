@@ -1,58 +1,37 @@
-.idea/
-/.augment/
+# R junk
+.RData
+.Rhistory
 
-# Python.
-__pycache__/
-*.pyc
-venv*/
-.venv/
-.env/
+# Logs
+*.log
+wget-log
 
-# Ignore contents of data directories but keep structure via .gitkeep.
-data/**/*
-!data/**/
-!data/**/.gitkeep
+# Images
+*.png
 
-fastq/**/*
-!fastq/**/
-!fastq/**/.gitkeep
+# TSV
+*.tsv
 
-umi/**/*
-!umi/**/
-!umi/**/.gitkeep
-
-fastp/**/*
-!fastp/**/
-!fastp/**/.gitkeep
-
-qc/**/*
-!qc/**/
-!qc/**/.gitkeep
-
-alignments/**/*
-!alignments/**/
-!alignments/**/.gitkeep
-
-bowtie2_index/**/*
-!bowtie2_index/**/
-!bowtie2_index/**/.gitkeep
-
-results/**/*
-!results/**/
-!results/**/.gitkeep
-
-# Large / generated files that should never be committed.
+# Bioinformatics data
+fastq/
+alignments/
+data/
+ref/
+star/
+starindex/# Bioinformatics data
 *.bam
-*.bai
-*.sam
+*.fastq
+*.fastq.gz
 *.bigWig
 *.bw
 *.bed
-*.bedGraph
-*.fa
-*.fa.fai
-*.gtf
-*.gtf.gz
-*.gff3
-*.gff3.gz
-*.sra
+*.tsv
+*.csv
+
+# Output folders
+data/
+fastq/
+alignments/
+bins/
+qc/
+logs/
