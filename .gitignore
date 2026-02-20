@@ -35,3 +35,8 @@ alignments/
 bins/
 qc/
 logs/
+
+# SLURM cluster job output files (keep directory structure, ignore contents).
+cluster_jobs/logs/**/*
+!cluster_jobs/logs/**/
+!cluster_jobs/logs/**/.gitkeep
