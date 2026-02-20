@@ -1,0 +1,11 @@
+@HD	VN:1.6	SO:coordinate
+@SQ	SN:chr22	LN:50818468
+@PG	ID:STAR	PN:STAR	VN:2.7.10a
+read001_plus_50bp	0	chr22	1049	255	1M	*	0	0	N	!
+read002_plus_30bp	0	chr22	2029	255	1M	*	0	0	N	!
+read003_minus_50bp	16	chr22	3000	255	1M	*	0	0	N	!
+read004_minus_25bp	16	chr22	4000	255	1M	*	0	0	N	!
+read005_plus_100bp	0	chr22	5099	255	1M	*	0	0	N	!
+read006_minus_100bp	16	chr22	6000	255	1M	*	0	0	N	!
+read007_plus_1bp	0	chr22	7000	255	1M	*	0	0	N	!
+read008_minus_1bp	16	chr22	8000	255	1M	*	0	0	N	!

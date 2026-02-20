@@ -74,9 +74,10 @@ def parse_genes(gtf_path):
             start = int(fields[3])
             end = int(fields[4])
             length = end - start + 1
+            chrom = fields[0]
             if gid not in genes or length > genes[gid]["length"]:
                 genes[gid] = {
-                    "gene_name": name, "chrom": "chr22", "strand": strand,
+                    "gene_name": name, "chrom": chrom, "strand": strand,
                     "start": start, "end": end, "length": length,
                 }
     return pd.DataFrame(genes.values())
@@ -100,7 +101,7 @@ def count_reads_per_gene(bam_path, genes_df):
     counts = []
     for _, row in genes_df.iterrows():
         n = 0
-        for read in bam.fetch("chr22", row["start"] - 1, row["end"]):
+        for read in bam.fetch(row["chrom"], row["start"] - 1, row["end"]):
             # PRO-seq R1 is antisense to the RNA.
             if row["strand"] == "+" and not read.is_reverse:
                 continue

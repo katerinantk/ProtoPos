@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
-BAM="alignments/SRR28248970.sorted.3prime.sorted.bam"
-CHROMS="data/genome.chrom.sizes"   
-OUT="SRR28248970"
+set -euo pipefail
+
+BAM="${1:-alignments/SRR28248970.sorted.3prime.sorted.bam}"
+CHROMS="${2:-data/genome.chrom.sizes}"
+OUT="${3:-SRR28248970}"
+
+if [[ ! -f "$BAM" ]]; then
+    echo "ERROR: BAM file not found: $BAM"
+    exit 1
+fi
+
+if [[ ! -f "$CHROMS" ]]; then
+    echo "ERROR: Chrom sizes file not found: $CHROMS"
+    exit 1
+fi
 
 # plus strand
 bedtools genomecov -ibam "$BAM" -bg -strand + -g "$CHROMS" \

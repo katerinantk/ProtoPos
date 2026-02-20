@@ -176,14 +176,7 @@ def main():
 
     # drop genes with no signal
     annotation = annotation.dropna(subset=["pol2_signal"])
-
-    # (optional) keep top 1000 by signal, sorted by gene name
-    annotation = (
-        annotation.sort_values("pol2_signal", ascending=False)
-                  .head(1000)
-                  .sort_values("gene_name")
-                  .reset_index(drop=True)
-    )
+    annotation = annotation.sort_values("gene_name").reset_index(drop=True)
 
     # write table
     annotation.to_csv(output_file, sep="\t", index=False)
