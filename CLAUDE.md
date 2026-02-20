@@ -33,6 +33,9 @@ ProtoPos/
 ├── Protopos.py              # Extract Pol II positions from aligned BAMs
 ├── RNAPsignal.py            # Compute RNAPII signal around TSS from BigWig
 ├── proseqanalysis.sh        # Main bash pipeline: download, QC, trim, align, dedup
+├── cluster_jobs/            # SLURM HPC job submission scripts
+│   ├── submit_proseq_pipeline.sh  # PRO-seq alignment pipeline
+│   └── logs/                # SLURM output files (gitignored)
 ├── scripts/                 # Utility scripts
 ├── data/                    # Input data (genome FASTA, GTF annotation, BigWig)
 ├── fastq/                   # Raw FASTQ files (created by pipeline)
@@ -218,6 +221,13 @@ Usage:
 - Use subagents for broad file exploration.
 - Background long downloads or alignment runs with `run_in_background`.
 - Always activate the conda environment before running tools: `source ~/miniconda3/bin/activate protopos`.
+
+### **Cluster Job Submission**
+
+- Example SLURM scripts live in `cluster_jobs/`. They auto-detect conda/venv, resolve all paths from `${BASH_SOURCE[0]}`, and write logs to `cluster_jobs/logs/` (gitignored).
+- Submit from the repo root: `sbatch cluster_jobs/submit_proseq_pipeline.sh`.
+- Always edit `--mail-user`, resource limits, and the user-configurable section before first use.
+- PRO-seq pipelines are I/O-intensive. Set `--mem` to 64G+ for genome indexing and BAM processing.
 
 ---
 
