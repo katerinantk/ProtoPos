@@ -1,4 +1,18 @@
-# R junk
+# Output files
+outputs/
+starindex/
+
+# Big intermediate files
+*.bedGraph
+*.rds
+Rplots.pdf
+
+# fastp reports
+fastp/*.html
+fastp/*.json
+
+# alignment indexes
+starindex/# R junk
 .RData
 .Rhistory
 
