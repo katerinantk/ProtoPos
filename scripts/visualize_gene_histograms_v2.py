@@ -57,10 +57,14 @@ except ImportError:
     SCIPY_AVAILABLE = False
 
 
+# Resolve repo root from this script's location (scripts/ is one level below repo root).
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
+
 # Configuration
-HISTOGRAM_DIR = "results/histograms"
-GENE_DEPTH_FILE = "results/gene_depth.tsv"
-OUTPUT_DIR = "results/figures"
+HISTOGRAM_DIR = os.path.join(_REPO_ROOT, "results", "histograms")
+GENE_DEPTH_FILE = os.path.join(_REPO_ROOT, "results", "gene_depth.tsv")
+OUTPUT_DIR = os.path.join(_REPO_ROOT, "results", "figures")
 TOP_N = 10
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)

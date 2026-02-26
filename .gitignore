@@ -54,3 +54,6 @@ logs/
 cluster_jobs/logs/**/*
 !cluster_jobs/logs/**/
 !cluster_jobs/logs/**/.gitkeep
+
+# Claude Code rules (symlinks to trasim-lab/MASTER_CLAUDE.md, not git-portable).
+.claude/rules/

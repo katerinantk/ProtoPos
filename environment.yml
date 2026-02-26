@@ -1,0 +1,45 @@
+# Conda environment for ProtoPos.
+#
+# Usage:
+#   conda env create -f environment.yml
+#   conda activate protopos
+#
+# ProtoPos is imported directly (no pip install needed).
+# To also install sibling packages:
+#   pip install -e ../POLYARIS
+#   pip install -e ../KINEMA
+#   pip install -e ../GENEFIT
+#   pip install -e ../SCAN
+
+name: protopos
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  # Core.
+  - python=3.10
+  - pip
+
+  # Scientific computing.
+  - numpy>=1.20.0
+  - scipy>=1.7.0
+  - pandas>=1.4.0
+
+  # Plotting.
+  - matplotlib>=3.5.0
+
+  # BAM/SAM processing.
+  - pysam>=0.19.0
+
+  # BigWig file support.
+  - pybigwig>=0.3.18
+
+  # Bioinformatics tools.
+  - samtools>=1.15
+  - bedtools>=2.30.0
+  - bowtie2>=2.4.0
+  - fastp>=0.23.0
+  - fastqc>=0.11.9
+  - sra-tools>=2.11.0
+  - umi_tools>=1.1.0

@@ -19,18 +19,23 @@ Usage:
     python scripts/steady_state_figure.py
 """
 
+import os
 import pysam
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
+# Resolve repo root from this script's location (scripts/ is one level below repo root).
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
+
 # -------------------------------------------------------------------------
 """Inputs."""
 # -------------------------------------------------------------------------
 
-bam_path = "alignments/SRR11793827.3prime.sorted.bam"
-gtf_path = "data/gencode.v47.annotation.gtf"
+bam_path = os.path.join(_REPO_ROOT, "alignments", "SRR11793827.3prime.sorted.bam")
+gtf_path = os.path.join(_REPO_ROOT, "data", "gencode.v47.annotation.gtf")
 
 # Window around TSS for the metagene profile.
 UPSTREAM = 500
@@ -40,8 +45,8 @@ DOWNSTREAM = 2000
 MIN_GENE_BODY_READS = 1
 
 # Output paths.
-output_figure = "results/steady_state_metagene.png"
-output_table = "results/steady_state_metagene.tsv"
+output_figure = os.path.join(_REPO_ROOT, "results", "steady_state_metagene.png")
+output_table = os.path.join(_REPO_ROOT, "results", "steady_state_metagene.tsv")
 
 
 # -------------------------------------------------------------------------

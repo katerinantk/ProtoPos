@@ -231,6 +231,28 @@ Usage:
 
 ---
 
-## **10. End of Instructions**
+## **10. Multi-Instance Coordination (v3)**
+
+**Full specification:** [`trasim-lab/MASTER_CLAUDE.md`](../trasim-lab/MASTER_CLAUDE.md) and [`trasim-lab/agents/multi_agent_work_plan.md`](../trasim-lab/agents/multi_agent_work_plan.md).
+
+This instance operates at **Tier 0-1** by default:
+- **Tier 0 (Read):** Read any file in any repo.
+- **Tier 1 (Soft Sync):** Write to `ProtoPos/` and `trasim-lab/agents/`.
+- **Tier 2 (Coordinated Integration):** Via handoff to `trasim-lab/agents/handoffs/`. Requires daily review.
+- **Tier 3 (Structural/Contract):** Via escalation. Requires Opus review.
+
+ProtoPos is a **provider** for SCAN via the `protopos_extract_active_sites` contract in `trasim-lab/configs/interface_schema.yaml`. Changes to `extract_active_sites` or `pol2_position` require Tier 2+ coordination.
+
+**Checkpoints:** Write to `trasim-lab/agents/checkpoints/ProtoPos_checkpoint_<YYYYMMDD>_<HHMMSS>.md`. Update `trasim-lab/agents/status_board.md` at every checkpoint.
+**Research log:** Read `trasim-lab/evaluation/research_log.md` at session start for research context. Propose entries for completed research-relevant work (see MASTER_CLAUDE.md "Research Execution Log" section).
+
+**ProtoPos-specific quality gates:**
+- Verify Pol II extraction correctness after any change to `Protopos.py` or `RNAPsignal.py`.
+- Check `trasim-lab/configs/interface_schema.yaml` before modifying `extract_active_sites` or `pol2_position`.
+- Long pipeline runs (downloads, alignments) must run in background with checkpoints before and after.
+
+---
+
+## **11. End of Instructions**
 
 Claude must follow all rules above.

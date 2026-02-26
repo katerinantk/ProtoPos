@@ -18,6 +18,7 @@ Usage:
     python scripts/gene_profiles.py
 """
 
+import os
 import pysam
 import numpy as np
 import pandas as pd
@@ -25,13 +26,17 @@ import matplotlib.pyplot as plt
 import random
 from collections import defaultdict
 
+# Resolve repo root from this script's location (scripts/ is one level below repo root).
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
+
 # -------------------------------------------------------------------------
 """Inputs."""
 # -------------------------------------------------------------------------
 
-bam_path = "alignments/SRR11793827.3prime.sorted.bam"
-gtf_path = "data/gencode.v47.annotation.gtf"
-output_figure = "results/gene_profiles.png"
+bam_path = os.path.join(_REPO_ROOT, "alignments", "SRR11793827.3prime.sorted.bam")
+gtf_path = os.path.join(_REPO_ROOT, "data", "gencode.v47.annotation.gtf")
+output_figure = os.path.join(_REPO_ROOT, "results", "gene_profiles.png")
 
 N_GENES = 10
 SEED = 42

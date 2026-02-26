@@ -20,18 +20,23 @@ Usage:
     python scripts/coregulated_profiles.py
 """
 
+import os
 import pysam
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
+# Resolve repo root from this script's location (scripts/ is one level below repo root).
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
+
 # -------------------------------------------------------------------------
 """Inputs."""
 # -------------------------------------------------------------------------
 
-bam_path = "alignments/SRR11793827.3prime.sorted.bam"
-gtf_path = "data/gencode.v47.annotation.gtf"
+bam_path = os.path.join(_REPO_ROOT, "alignments", "SRR11793827.3prime.sorted.bam")
+gtf_path = os.path.join(_REPO_ROOT, "data", "gencode.v47.annotation.gtf")
 
 # 22q11.2 region boundaries (approximate, GRCh38).
 REGION_START = 18_900_000
@@ -42,9 +47,9 @@ UPSTREAM = 500
 DOWNSTREAM = 2000
 
 # Output paths.
-output_individual = "results/22q11_individual_profiles.png"
-output_metagene = "results/22q11_group_metagene.png"
-output_high_depth = "results/high_depth_genes.png"
+output_individual = os.path.join(_REPO_ROOT, "results", "22q11_individual_profiles.png")
+output_metagene = os.path.join(_REPO_ROOT, "results", "22q11_group_metagene.png")
+output_high_depth = os.path.join(_REPO_ROOT, "results", "high_depth_genes.png")
 
 
 # -------------------------------------------------------------------------

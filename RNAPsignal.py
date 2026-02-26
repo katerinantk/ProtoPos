@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 
+import os
 import pyBigWig
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Resolve repo root from this script's location.
+_REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 # -----------------------------
 # Inputs
 # -----------------------------
-gtf_path = "data/gencode.v47.annotation.gtf"
-bw_plus  = "data/GSE181161_PROseq_K562_hg38_pl.bigWig"
-bw_minus = "data/GSE181161_PROseq_K562_hg38_mn.bigWig"
+gtf_path = os.path.join(_REPO_ROOT, "data", "gencode.v47.annotation.gtf")
+bw_plus  = os.path.join(_REPO_ROOT, "data", "GSE181161_PROseq_K562_hg38_pl.bigWig")
+bw_minus = os.path.join(_REPO_ROOT, "data", "GSE181161_PROseq_K562_hg38_mn.bigWig")
 
 upperwindow = 200   # upstream of TSS
 lowerwindow = 200   # downstream of TSS
 
 # Outputs
-output_file = "pol2signal.tsv"
-output_plot = "pol2violin.png"
+output_file = os.path.join(_REPO_ROOT, "pol2signal.tsv")
+output_plot = os.path.join(_REPO_ROOT, "pol2violin.png")
 
 
 # ------------------------------------------------------------------------------
