@@ -18,3 +18,19 @@ tail -f cluster_jobs/logs/protopos_proseq_<JOB_ID>.out
 ```
 
 See `cluster_jobs/README.md` for full details.
+
+## CLI Commands
+
+ProtoPos has no pip-installed CLI entry points. The following standalone scripts can be run directly with `python`. All resolve paths relative to their own location via `__file__`, so they work from any directory.
+
+| Script | Description |
+|--------|-------------|
+| `scripts/gene_histogram.py` | Generate per-gene 3' end distribution histograms from BAM data. |
+| `scripts/measure_gene_depth.py` | Measure per-gene sequencing depth from BAM and GTF. |
+| `scripts/subset_fastq_by_chrom.py` | Subset FASTQ files by chromosome for test datasets. |
+| `scripts/visualize_gene_histograms.py` | Visualize top genes by sequencing depth with histogram plots. |
+| `scripts/visualize_gene_histograms_v2.py` | Improved sparse PRO-seq visualizations with smoothing. |
+| `scripts/coregulated_profiles.py` | Co-regulated gene profile analysis (22q11.2 region). |
+| `scripts/gene_profiles.py` | Random gene profile visualization from BAM data. |
+| `scripts/steady_state_figure.py` | Steady-state metagene profile around TSS. |
+| `RNAPsignal.py` | RNAP signal extraction around TSS from BigWig data. |
