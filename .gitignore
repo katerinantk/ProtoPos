@@ -57,3 +57,5 @@ cluster_jobs/logs/**/*
 
 # Claude Code rules (symlinks to trasim-lab/MASTER_CLAUDE.md, not git-portable).
 .claude/rules/
+*.bt2
+*.bt2l
