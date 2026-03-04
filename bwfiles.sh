@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BAM="${1:-alignments/SRR28248970.sorted.3prime.sorted.bam}"
+BAM="${1:-alignments/SRR28248969.sorted.3prime.sorted.bam}"
 CHROMS="${2:-data/genome.chrom.sizes}"
-OUT="${3:-SRR28248970}"
+OUT="${3:-SRR28248969}"
+OUTDIR="bigwig"
+
+mkdir -p "$OUTDIR"
 
 if [[ ! -f "$BAM" ]]; then
     echo "ERROR: BAM file not found: $BAM"

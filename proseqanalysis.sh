@@ -4,7 +4,7 @@ set -euo pipefail
 # -----------------------------
 # Inputs
 # -----------------------------
-SRA_IDS=("SRR28248968")
+SRA_IDS=("SRR28248969")
 THREADS=8
 DO_UMI="${DO_UMI:-0}"   # if it's 0 umi extraction does not happen 
 
@@ -75,7 +75,7 @@ if [[ -f "${BT2_INDEX}.1.bt2" || -f "${BT2_INDEX}.1.bt2l" ]]; then
   fi
 
   echo "Checking existing Bowtie2 index sanity..."
-  if ! bowtie2-inspect -n "${BT2_INDEX}" | head -n 50 | grep -qx "chr1"; then
+  if ! bowtie2-inspect -n "${BT2_INDEX}" | head -n 50 | grep -Eq '^chr1(\s|$)'; then
     echo "WARNING: Bowtie2 index doesn't look like full genome (chr1 not found in first 50 contigs)."
     echo "Removing stale index files so it will be rebuilt from: ${GENOME_FA}"
     rm -f "${BT2_INDEX}"*.bt2 "${BT2_INDEX}"*.bt2l

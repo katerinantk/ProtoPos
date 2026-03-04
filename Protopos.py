@@ -141,7 +141,7 @@ def extract_active_sites(input_bam, output_bam, protocol="pro_seq"):
 # -------------------------------------------------------------------------
 
 BAM_FILES = [
-    "alignments/SRR28248970.sorted.bam",
+    "alignments/SRR28248969.sorted.bam",
 ]
 
 
