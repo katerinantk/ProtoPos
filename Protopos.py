@@ -7,8 +7,8 @@ Contact: botoschristos@gmail.com
 Script Name: Protopos.py.
 Description:
     Extracts the RNA Polymerase II active-site position from aligned
-    nascent-RNA sequencing reads.  Supports both PRO-seq and GRO-seq
-    library conventions:
+    nascent-RNA sequencing reads.  Supports PRO-seq, GRO-seq, and
+    mNET-seq library conventions:
 
     PRO-seq (antisense library):
         R1 maps antisense to the nascent RNA.  The 5' end of the aligned
@@ -20,6 +20,13 @@ Description:
     GRO-seq (sense library):
         Reads map in the same direction as transcription.  The 3' end of
         the aligned read marks the polymerase active site.
+        - Forward alignment: active site = reference_end - 1.
+        - Reverse alignment: active site = reference_start.
+
+    mNET-seq (sense library):
+        Reads are sense-oriented like GRO-seq.  The 3' end of the read
+        corresponds to the 3' end of the nascent RNA, i.e. the Pol II
+        active site.  Uses the same extraction logic as GRO-seq.
         - Forward alignment: active site = reference_end - 1.
         - Reverse alignment: active site = reference_start.
 
@@ -53,6 +60,9 @@ def pol2_position(read, protocol="pro_seq"):
             end of the sequencing read marks the active site.
             ``"gro_seq"`` — GRO-seq (sense reads).  The 3' end of the
             sequencing read marks the active site.
+            ``"mnet_seq"`` — mNET-seq (sense reads).  The 3' end of the
+            sequencing read marks the active site.  Same extraction logic
+            as GRO-seq.
 
     Returns:
         int: 0-based coordinate of the polymerase position.
@@ -66,15 +76,16 @@ def pol2_position(read, protocol="pro_seq"):
             return read.reference_end - 1
         else:
             return read.reference_start
-    elif protocol == "gro_seq":
-        # GRO-seq: 3' end of the read = active site (sense orientation).
+    elif protocol in ("gro_seq", "mnet_seq"):
+        # GRO-seq / mNET-seq: 3' end of the read = active site (sense orientation).
         if read.is_reverse:
             return read.reference_start
         else:
             return read.reference_end - 1
     else:
         raise ValueError(
-            f"Unknown protocol '{protocol}'. Use 'pro_seq' or 'gro_seq'."
+            f"Unknown protocol '{protocol}'. "
+            f"Use 'pro_seq', 'gro_seq', or 'mnet_seq'."
         )
 
 
@@ -89,7 +100,7 @@ def extract_active_sites(input_bam, output_bam, protocol="pro_seq"):
         input_bam (str): Path to input sorted BAM file.
         output_bam (str): Path for the output 1 bp BAM file.  After
             sorting the file is written to this path (sorted and indexed).
-        protocol (str): ``"pro_seq"`` or ``"gro_seq"``.
+        protocol (str): ``"pro_seq"``, ``"gro_seq"``, or ``"mnet_seq"``.
 
     Returns:
         dict: Statistics with keys ``'total_reads'``, ``'plus_strand'``,
