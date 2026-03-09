@@ -34,3 +34,21 @@ ProtoPos has no pip-installed CLI entry points. The following standalone scripts
 | `scripts/gene_profiles.py` | Random gene profile visualization from BAM data. |
 | `scripts/steady_state_figure.py` | Steady-state metagene profile around TSS. |
 | `RNAPsignal.py` | RNAP signal extraction around TSS from BigWig data. |
+
+## Coordinate Convention: ProtoPos vs POLYARIS Positions
+
+ProtoPos extracts the **last incorporated nucleotide** (the 3' end of the nascent RNA), which is the position that real sequencing (PRO-seq, GRO-seq) measures. POLYARIS records the **Pol II active center**, which is the next base to be incorporated. These differ by exactly 1 bp:
+
+```
+POLYARIS active center:  position P  (0-based gene-relative, half-open)
+ProtoPos 3' end:         position P - 1  (last incorporated nucleotide)
+```
+
+In genomic coordinates the sign of the offset depends on strand:
+
+| Strand | ProtoPos genomic position | Relationship |
+|--------|--------------------------|--------------|
+| + | POLYARIS genomic - 1 | ProtoPos is 1 bp upstream |
+| - | POLYARIS genomic + 1 | ProtoPos is 1 bp upstream (opposite genomic direction) |
+
+This is expected and biologically correct. When comparing ProtoPos output to POLYARIS `RNA_pol_positions` TSV files, add 1 (gene-relative) to ProtoPos positions to recover the POLYARIS active-center convention.
