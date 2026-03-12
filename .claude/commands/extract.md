@@ -6,7 +6,7 @@ Activate conda first: source ~/miniconda3/bin/activate protopos
 
 Default invocation:
 ```bash
-source ~/miniconda3/bin/activate protopos && python /mnt/c/Projects/Botos_Transcription_Simulation_Project/ProtoPos/Protopos.py
+source ~/miniconda3/bin/activate protopos && python /mnt/d/Lab/Botos_Transcription_Simulation_Project/ProtoPos/Protopos.py
 ```
 
 Key parameters:
